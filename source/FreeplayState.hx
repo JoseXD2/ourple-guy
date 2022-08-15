@@ -300,6 +300,10 @@ class FreeplayState extends MusicBeatState
 		super.create();
 		camGame.setFilters([new ShaderFilter(new PincushionShader())]);
 		camGame.filtersEnabled = !ClientPrefs.lowQuality;
+		
+		#if android
+                addVirtualPad(LEFT_FULL, A_B);
+                #end
 	}
 
 	override function closeSubState() {
