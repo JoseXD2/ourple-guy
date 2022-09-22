@@ -3,6 +3,7 @@ package;
 #if android
 import android.Hardware;
 import android.Permissions;
+import android.os.Build;
 import android.os.Environment;
 #end
 import flash.system.System;
@@ -21,7 +22,7 @@ using StringTools;
 
 /**
  * ...
- * @author: Saw (M.A. Jigsaw)
+ * @author Mihai Alexandru (M.A. Jigsaw)
  */
 class SUtil
 {
@@ -31,21 +32,29 @@ class SUtil
 	public static function check()
 	{
 		#if android
-		if (!Permissions.getGrantedPermissions().contains(PermissionsList.WRITE_EXTERNAL_STORAGE)
-			&& !Permissions.getGrantedPermissions().contains(PermissionsList.READ_EXTERNAL_STORAGE))
+		if (!Permissions.getGrantedPermissions().contains(Permissions.WRITE_EXTERNAL_STORAGE)
+			&& !Permissions.getGrantedPermissions().contains(Permissions.READ_EXTERNAL_STORAGE))
 		{
-			Permissions.requestPermissions([PermissionsList.WRITE_EXTERNAL_STORAGE, PermissionsList.READ_EXTERNAL_STORAGE]);
+			if (VERSION.SDK_INT >= VERSION_CODES.M)
+			{
+				Permissions.requestPermissions([Permissions.WRITE_EXTERNAL_STORAGE, Permissions.READ_EXTERNAL_STORAGE]);
 
-			/**
-			 * Basically for now i can't force the app to stop while its requesting a android permission, so this makes the app to stop while its requesting the specific permission
-			 */
-			Application.current.window.alert('If you accepted the permissions you are all good!' + "\nIf you didn't then expect a crash"
-				+ 'Press Ok to see what happens',
-				'Permissions?');
+				/**
+				 * Basically for now i can't force the app to stop while its requesting a android permission, so this makes the app to stop while its requesting the specific permission
+				 */
+				Application.current.window.alert('If you accepted the permissions you are all good!' + "\nIf you didn't then expect a crash"
+					+ 'Press Ok to see what happens',
+					'Permissions?');
+			}
+			else
+			{
+				Application.current.window.alert('Please grant the game storage permissions in app settings' + '\nPress Ok to close the app', 'Permissions?');
+				System.exit(1);
+			}
 		}
 
-		if (Permissions.getGrantedPermissions().contains(PermissionsList.WRITE_EXTERNAL_STORAGE)
-			&& Permissions.getGrantedPermissions().contains(PermissionsList.READ_EXTERNAL_STORAGE))
+		if (Permissions.getGrantedPermissions().contains(Permissions.WRITE_EXTERNAL_STORAGE)
+			&& Permissions.getGrantedPermissions().contains(Permissions.READ_EXTERNAL_STORAGE))
 		{
 			if (!FileSystem.exists(SUtil.getPath()))
 				FileSystem.createDirectory(SUtil.getPath());
@@ -102,13 +111,7 @@ class SUtil
 	 * This returns the external storage path that the game will use
 	 */
 	public static function getPath():String
-	{
-		#if android
-		return Environment.getExternalStorageDirectory() + '/' + '.' + Application.current.meta.get('file') + '/';
-		#else
-		return '';
-		#end
-	}
+		#if android return Environment.getExternalStorageDirectory() + '/' + '.' + Application.current.meta.get('file') + '/'; #else return ''; #end
 
 	/**
 	 * Uncaught error handler, original made by: sqirra-rng
@@ -144,13 +147,18 @@ class SUtil
 				if (!FileSystem.exists(SUtil.getPath() + 'logs'))
 					FileSystem.createDirectory(SUtil.getPath() + 'logs');
 
-				File.saveContent(SUtil.getPath() + 'logs/' + Application.current.meta.get('file') + '-'
-					+ Date.now().toString().replace(' ', '-').replace(':', "'") + '.log',
-					errMsg + '\n');
+				File.saveContent(SUtil.getPath()
+					+ 'logs/'
+					+ Application.current.meta.get('file')
+					+ '-'
+					+ Date.now().toString().replace(' ', '-').replace(':', "'")
+					+ '.log',
+					errMsg
+					+ '\n');
 			}
 			#if android
 			catch (e:Dynamic)
-				Hardware.toast("Error!\nClouldn't save the crash dump because:\n" + e, ToastType.LENGTH_LONG);
+			Hardware.toast("Error!\nClouldn't save the crash dump because:\n" + e, ToastType.LENGTH_LONG);
 			#end
 
 			Sys.println(errMsg);
@@ -160,7 +168,8 @@ class SUtil
 		});
 	}
 
-	public static function saveContent(fileName:String = 'file', fileExtension:String = '.json', fileData:String = 'you forgot to add something in your code lol')
+	public static function saveContent(fileName:String = 'file', fileExtension:String = '.json',
+			fileData:String = 'you forgot to add something in your code lol')
 	{
 		try
 		{
@@ -172,7 +181,7 @@ class SUtil
 		}
 		#if android
 		catch (e:Dynamic)
-			Hardware.toast("Error!\nClouldn't save the file because:\n" + e, ToastType.LENGTH_LONG);
+		Hardware.toast("Error!\nClouldn't save the file because:\n" + e, ToastType.LENGTH_LONG);
 		#end
 	}
 
@@ -185,7 +194,7 @@ class SUtil
 		}
 		#if android
 		catch (e:Dynamic)
-			Hardware.toast("Error!\nClouldn't copy the file because:\n" + e, ToastType.LENGTH_LONG);
+		Hardware.toast("Error!\nClouldn't copy the file because:\n" + e, ToastType.LENGTH_LONG);
 		#end
 	}
 }
